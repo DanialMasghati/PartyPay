@@ -146,8 +146,11 @@ const Index = () => {
     setError(null);
     setResult(null);
 
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/calculate/', {
+      // ۲. استفاده از متغیر baseUrl در آدرس‌دهی
+      const response = await fetch(`${baseUrl}/api/calculate/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

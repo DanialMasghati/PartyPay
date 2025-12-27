@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 venv/
 .env
+.env.production
 db.sqlite3
 
 # Node / React
