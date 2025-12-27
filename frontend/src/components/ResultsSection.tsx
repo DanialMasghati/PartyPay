@@ -1,19 +1,44 @@
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, Loader2, AlertCircle, RefreshCw, Camera, Share2, Download, Sparkles } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { Calculator, Loader2, AlertCircle, RefreshCw, Camera, Share2, Download, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
+interface TableRow {
+  name: string;
+  share: number;
+  paid: number;
+  balance: number;
+  status: string;
+}
+
+interface Settlement {
+  from: string;
+  to: string;
+  amount: number;
+}
+
+interface ResultData {
+  table: TableRow[];
+  settlements: Settlement[];
+  reasoning: string;
+}
+
 interface ResultsSectionProps {
-  result: string | null;
+  result: ResultData | null;
   isLoading: boolean;
   error: string | null;
   onCalculate: () => void;
   canCalculate: boolean;
 }
+
+const formatNumber = (num: number): string => {
+  return num.toLocaleString('en-US');
+};
 
 export function ResultsSection({ result, isLoading, error, onCalculate, canCalculate }: ResultsSectionProps) {
   const { t, language } = useLanguage();
@@ -21,6 +46,7 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
   const resultRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [isReasoningOpen, setIsReasoningOpen] = useState(false);
 
   const captureImage = async (): Promise<Blob | null> => {
     if (!resultRef.current) return null;
@@ -85,12 +111,10 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
         toast({ title: t('shareSuccess') });
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
-          // Fallback to download if share fails
           handleDownload();
         }
       }
     } else {
-      // Fallback for browsers that don't support sharing files
       handleDownload();
     }
   };
@@ -108,7 +132,6 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
       ]);
       toast({ title: t('copySuccess') });
     } catch (err) {
-      // Fallback to download
       handleDownload();
     }
   };
@@ -198,9 +221,78 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
                   PartyPay ✨
                 </span>
               </div>
-              <div className="markdown-result prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{result}</ReactMarkdown>
+
+              {/* Results Table */}
+              <div className="mb-6 rounded-lg border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-semibold">{t('person')}</TableHead>
+                      <TableHead className="font-semibold text-center">{t('share')}</TableHead>
+                      <TableHead className="font-semibold text-center">{t('paidAmount')}</TableHead>
+                      <TableHead className="font-semibold text-center">{t('finalBalance')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.table.map((row, index) => (
+                      <TableRow key={index} className="hover:bg-muted/30">
+                        <TableCell className="font-medium">{row.name}</TableCell>
+                        <TableCell className="text-center">{formatNumber(row.share)}</TableCell>
+                        <TableCell className="text-center">{formatNumber(row.paid)}</TableCell>
+                        <TableCell className="text-center">
+                          <span className={`font-semibold px-2 py-1 rounded-md ${
+                            row.balance > 0 
+                              ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' 
+                              : row.balance < 0 
+                                ? 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
+                                : 'text-muted-foreground'
+                          }`}>
+                            {row.balance > 0 ? '+' : ''}{formatNumber(row.balance)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
+
+              {/* Settlement Plan - Most Important */}
+              {result.settlements.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 text-primary" />
+                    {t('settlementPlan')}
+                  </h4>
+                  <div className="grid gap-3">
+                    {result.settlements.map((settlement, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-foreground bg-muted px-3 py-1.5 rounded-lg">
+                            {settlement.from}
+                          </span>
+                          <div className="flex items-center gap-1 text-primary">
+                            <ArrowRight className="w-5 h-5" />
+                          </div>
+                          <span className="font-semibold text-foreground bg-muted px-3 py-1.5 rounded-lg">
+                            {settlement.to}
+                          </span>
+                        </div>
+                        <span className="text-lg font-bold text-primary">
+                          {formatNumber(settlement.amount)}
+                          {t('currency') && <span className="text-sm ms-1">{t('currency')}</span>}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Footer Branding */}
               <div className="mt-4 pt-3 border-t border-border/50 text-center">
                 <p className="text-xs text-muted-foreground">
@@ -208,6 +300,30 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
                 </p>
               </div>
             </div>
+
+            {/* Reasoning Accordion - Outside Screenshot Area */}
+            {result.reasoning && (
+              <Collapsible open={isReasoningOpen} onOpenChange={setIsReasoningOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full flex items-center justify-between p-4 hover:bg-muted/50 rounded-lg border border-border"
+                  >
+                    <span className="font-medium text-muted-foreground">{t('viewDetails')}</span>
+                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isReasoningOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 p-4 bg-muted/30 rounded-lg border border-border text-sm text-muted-foreground whitespace-pre-wrap"
+                  >
+                    {result.reasoning}
+                  </motion.div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             {/* Share Actions */}
             <AnimatePresence>
@@ -218,31 +334,19 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
                   transition={{ delay: 0.2 }}
                   className="flex flex-wrap items-center justify-center gap-3"
                 >
-                  {/* Screenshot Button */}
-                  <motion.div
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       onClick={handleCopyImage}
                       disabled={isCapturing}
                       variant="outline"
                       className="gap-2 px-4 py-2 rounded-full border-primary/30 hover:border-primary hover:bg-primary/10 transition-all"
                     >
-                      {isCapturing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Camera className="w-4 h-4 text-primary" />
-                      )}
+                      {isCapturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4 text-primary" />}
                       <span>{t('copyImage')}</span>
                     </Button>
                   </motion.div>
 
-                  {/* Download Button */}
-                  <motion.div
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       onClick={handleDownload}
                       disabled={isCapturing}
@@ -254,11 +358,7 @@ export function ResultsSection({ result, isLoading, error, onCalculate, canCalcu
                     </Button>
                   </motion.div>
 
-                  {/* Share Button */}
-                  <motion.div
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       onClick={handleShare}
                       disabled={isCapturing}

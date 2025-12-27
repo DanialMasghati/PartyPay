@@ -23,12 +23,32 @@ interface Payer {
   amount: number;
 }
 
+interface TableRow {
+  name: string;
+  share: number;
+  paid: number;
+  balance: number;
+  status: string;
+}
+
+interface Settlement {
+  from: string;
+  to: string;
+  amount: number;
+}
+
+interface ResultData {
+  table: TableRow[];
+  settlements: Settlement[];
+  reasoning: string;
+}
+
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [participants, setParticipants] = useState<string[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [payers, setPayers] = useState<Payer[]>([]);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<ResultData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,7 +164,15 @@ const Index = () => {
       }
 
       const data = await response.json();
-      setResult(data.result || data.message || JSON.stringify(data, null, 2));
+      
+      // Parse the new JSON format
+      const resultData: ResultData = {
+        table: data.table || [],
+        settlements: data.settlements || [],
+        reasoning: data.reasoning || '',
+      };
+      
+      setResult(resultData);
     } catch (err) {
       setError(t('error'));
       toast({

@@ -63,6 +63,16 @@ const translations: Translations = {
   error: { en: 'An error occurred', fa: 'خطایی رخ داد' },
   tryAgain: { en: 'Try again', fa: 'تلاش مجدد' },
   
+  // Table Headers
+  person: { en: 'Person', fa: 'شخص' },
+  share: { en: 'Share (Cost)', fa: 'سهم (هزینه)' },
+  paidAmount: { en: 'Paid', fa: 'پرداختی' },
+  finalBalance: { en: 'Final Balance', fa: 'مانده نهایی' },
+  
+  // Settlement
+  settlementPlan: { en: 'Settlement Plan', fa: 'برنامه تسویه' },
+  viewDetails: { en: 'View Calculation Details', fa: 'مشاهده جزئیات محاسبه' },
+  
   // Validation
   addParticipantsFirst: { en: 'Please add participants first', fa: 'لطفاً ابتدا شرکت‌کنندگان را اضافه کنید' },
   addExpensesFirst: { en: 'Please add at least one expense', fa: 'لطفاً حداقل یک هزینه اضافه کنید' },
