@@ -7,7 +7,6 @@ class DailyUsage(models.Model):
     request_count = models.PositiveIntegerField(default=0)
 
     class Meta:
-        # تضمین می‌کند که برای هر IP در هر روز فقط یک رکورد وجود داشته باشد
         unique_together = ('ip_address', 'date')
 
     def __str__(self):
