@@ -57,7 +57,7 @@ class CalculateShareView(APIView):
         today = timezone.now().date()
         usage_record, created = DailyUsage.objects.get_or_create(ip_address=user_ip, date=today)
         
-        if usage_record.request_count >= 100:
+        if usage_record.request_count >= 3:
              return Response({"error": "Daily limit reached."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         validated_data = serializer.validated_data

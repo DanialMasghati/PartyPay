@@ -134,3 +134,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",          
     "https://partypay.liara.run", 
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://partypay.liara.run",
+]
